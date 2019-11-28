@@ -23,12 +23,9 @@ def train_trees(data,attributes):
 
         data.class_index = i
 
-        this_clf = Classifier(classname='weka.classifiers.trees.J48',options = ['-C','0.2','-M','2'])
-
+        this_clf = Classifier(classname='weka.classifiers.trees.J48',options = ['-C','0.5','-M','2'])
         this_clf.build_classifier(data)
-
         dt_y_hat.append(this_clf.distributions_for_instances(data))
-
         clfs.append(this_clf)
 
     return clfs,dt_y_hat
@@ -56,7 +53,7 @@ def get_initial_weights(data,clfs,attributes,dt_y_hat):
 
         w2_init.append(np.mean(rocs))
 
-        print('AUC: {:0.4f}'.format(np.mean(rocs)))
+        print('Attribute {}: {}\n\tAUC: {:0.4f}'.format(i,att,np.mean(rocs)))
 
         temp_w = np.zeros(len(data.attribute(i).values))
 
@@ -156,5 +153,46 @@ def train(w1_init,b1_init,lr,iterations,N,data,attributes,dt_y_hat):
         if i % 50 == 0 or i == iterations-1:
             print('Iteration {}:'.format(i+1))
             for m, loss_part in enumerate(this_loss):
-                print('\tAttribute {}: {:0.4f}'.format(m+1,loss_part))
+                print('\tAttribute {} Loss: {:0.4f}'.format(m+1,loss_part))
     return w1,b1
+
+def test(data,N,attributes,clfs,w1,b1,w2):
+
+    remove = Filter(classname='weka.filters.unsupervised.attribute.Remove',
+                    options = ['-R','last'])
+    remove.inputformat(data)
+
+    data_noclass = remove.filter(data)
+
+    dt_all = []
+
+    for i,att in enumerate(attributes[:-1]):
+        data_noclass.class_index = i
+        dt_all.append(clfs[i].distributions_for_instances(data_noclass))
+
+    hl1_this_all = np.zeros((N,len(attributes[:-1])))
+    preds = []
+
+    for j,x_prime in enumerate(dt_all):
+
+        num_labels = np.array(data_noclass.values(j),dtype = np.int64)
+
+        for dani,f in enumerate(num_labels):
+            if f < 0:
+                num_labels[dani] = 0
+
+        preds.append(neuron_l1(x_prime,w1[j],b1[j],num_labels))
+
+    res = np.dot(np.array(preds).T,w2)/len(attributes[:-1])
+
+    class_index_data = data.class_index
+
+    y = data.values(class_index_data)
+    y = np.abs(y-1)
+
+    my_score = roc_auc_score(y,res)
+    print('\n\n############ Final AUC Score on Testing Data ############\n')
+
+    print('\t\t',my_score,'\n\n')
+
+    return res,my_score
