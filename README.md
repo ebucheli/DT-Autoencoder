@@ -9,5 +9,5 @@ Use `--rand_init` flag to start with random parameters, Recall and AUC otherwise
 ### Dependencies
 
  1. python=3.6.7
- 1. (python-weka-wrapper3)[https://pypi.org/project/python-weka-wrapper3/]
+ 1. [python-weka-wrapper3](https://pypi.org/project/python-weka-wrapper3/)
  1. Anaconda
