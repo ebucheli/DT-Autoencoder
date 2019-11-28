@@ -47,7 +47,6 @@ if __name__ == '__main__':
     print('\n\n############ Training Decision Trees ############\n\n')
 
     clfs,dt_y_hat = train_trees(data_train,attributes)
-
     w2_init,w1_init,b1_init = get_initial_weights(data_train,clfs,attributes,dt_y_hat)
 
     if rand_init == True:

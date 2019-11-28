@@ -19,7 +19,7 @@ def train_trees(data,attributes):
     clfs = []
     dt_y_hat = []
 
-    for i,att in enumerate(attributes[:-1]):
+    for i,att in enumerate(attributes):
 
         data.class_index = i
 
@@ -34,7 +34,7 @@ def get_initial_weights(data,clfs,attributes,dt_y_hat):
     w1_init = []
     w2_init = []
 
-    for i,att in enumerate(attributes[:-1]):
+    for i,att in enumerate(attributes):
 
         this_y_hat = np.argmax(dt_y_hat[i],axis = 1)
         this_y = data.values(i)
