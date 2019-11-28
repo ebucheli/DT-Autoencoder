@@ -37,10 +37,10 @@ if __name__ == '__main__':
     N_train = data_train.num_instances
     #data_normal, N = make_partition(data,attributes)
 
-    remove = Filter(classname='weka.filters.unsupervised.attribute.Remove',
-                    options = ['-R','last'])
-    remove.inputformat(data_train)
-    data_train = remove.filter(data_train)
+    #remove = Filter(classname='weka.filters.unsupervised.attribute.Remove',
+                    #options = ['-R','last'])
+    #remove.inputformat(data_train)
+    #data_train = remove.filter(data_train)
 
     m_train = data_train.num_attributes
 
