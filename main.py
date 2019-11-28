@@ -33,13 +33,14 @@ if __name__ == '__main__':
 
     jvm.start()
 
-    data, attributes = load_data(train_path)
-    data_normal, N = make_partition(data,attributes)
+    data_train, attributes = load_data(train_path)
+    N_train = data_train.num_instances
+    #data_normal, N = make_partition(data,attributes)
 
     print('\n\n############ Training Decision Trees ############\n\n')
 
-    clfs,dt_y_hat = train_trees(data_normal,attributes)
-    w2_init,w1_init,b1_init = get_initial_weights(data_normal,clfs,attributes,dt_y_hat)
+    clfs,dt_y_hat = train_trees(data_train,attributes)
+    w2_init,w1_init,b1_init = get_initial_weights(data_train,clfs,attributes,dt_y_hat)
 
     print('\n\nDone!')
 
@@ -49,8 +50,8 @@ if __name__ == '__main__':
                 b1_init = b1_init,
                 lr = 0.01,
                 iterations = 100,
-                N = N,
-                data = data_normal,
+                N = N_train,
+                data = data_train,
                 attributes = attributes,
                 dt_y_hat = dt_y_hat)
 
@@ -60,8 +61,14 @@ if __name__ == '__main__':
 
     res,my_score = test(data_test,N_test,attributes_test,clfs,w1,b1,w2_init)
 
+
+
+    print('\n\n############ Final AUC Score on Testing Data ############\n')
+
+    print('\t\t',my_score,'\n\n')
+
     res2,my_score2 = test(data_test,N_test,attributes_test,clfs,w1_init,b1_init,w2_init)
 
-    print('Score using initial values: ',my_score2)
+    print('Score using initial values: {}\n\n'.format(my_score2))
 
     jvm.stop()

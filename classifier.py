@@ -191,8 +191,5 @@ def test(data,N,attributes,clfs,w1,b1,w2):
     y = np.abs(y-1)
 
     my_score = roc_auc_score(y,res)
-    print('\n\n############ Final AUC Score on Testing Data ############\n')
-
-    print('\t\t',my_score,'\n\n')
 
     return res,my_score
