@@ -3,7 +3,7 @@ from weka.core.converters import Loader
 from weka.filters import Filter
 
 import numpy as np
-import pandas as pd
+#import pandas as pd
 
 def load_data(filename):
     loader = Loader(classname = 'weka.core.converters.ArffLoader')

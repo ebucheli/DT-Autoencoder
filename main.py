@@ -2,8 +2,7 @@ import argparse
 import json
 
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
+#import pandas as pd
 from scipy.io import arff
 
 from weka.core import jvm
@@ -12,7 +11,7 @@ from weka.core.converters import Loader
 from weka.filters import Filter
 
 from copy import deepcopy
-import sklearn
+#import sklearn
 
 from classifier import train_trees, get_initial_weights,sigmoid,neuron_l1,train, test
 from data_loader import load_data, make_partition
