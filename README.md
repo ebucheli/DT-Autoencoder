@@ -11,6 +11,8 @@ Four possible input arguments:
 
 Use `--rand_init` flag to start with random parameters, Recall and AUC otherwise.
 
+##### Example
+
 `python main.py --training_data [train_data].arff --testing_data [test_data].arff --outfile [outfile].json --rand_init`
 
 ### Dependencies
