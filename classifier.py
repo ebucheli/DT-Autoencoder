@@ -6,7 +6,8 @@ import numpy as np
 from sklearn.metrics import recall_score, roc_auc_score
 
 from weka.core import jvm
-from weka.classifiers import Classifier
+from weka.classifiers import Classifier, Evaluation
+from weka.core.classes import Random
 from weka.core.converters import Loader
 from weka.filters import Filter
 
@@ -17,55 +18,59 @@ from copy import deepcopy
 def train_trees(data,attributes):
 
     clfs = []
+    evls = []
     dt_y_hat = []
 
     for i,att in enumerate(attributes):
 
         data.class_index = i
 
-        this_clf = Classifier(classname='weka.classifiers.trees.J48',options = ['-C','0.5','-M','2'])
+        this_clf = Classifier(classname='weka.classifiers.trees.J48',options = ['-C','0.25','-M','2'])
         this_clf.build_classifier(data)
+
+        this_evl = Evaluation(data)
+        this_evl.crossvalidate_model(this_clf,data,10,Random(1))
+
         dt_y_hat.append(this_clf.distributions_for_instances(data))
         clfs.append(this_clf)
+        evls.append(this_evl)
 
-    return clfs,dt_y_hat
+    return clfs,evls,dt_y_hat
 
-def get_initial_weights(data,clfs,attributes,dt_y_hat):
+def get_initial_weights(data,clfs,evls,attributes,dt_y_hat):
     w1_init = []
     w2_init = []
 
     for i,att in enumerate(attributes):
 
-        this_y_hat = np.argmax(dt_y_hat[i],axis = 1)
-        this_y = data.values(i)
+        print('Attribute: {}\n'.format(att))
 
         rocs = []
 
-        for j in np.unique(this_y):
+        att_values = data.attribute(i).values
+        len_att_values = len(att_values)
 
-            new_y_hat = np.array([1 if f == j else 0 for f in this_y_hat])
-            new_y = np.array([1 if f == j else 0 for f in this_y])
+        temp_w = np.zeros(len_att_values)
 
-            if np.all(new_y == 0):
-                pass
-            else:
-                rocs.append(roc_auc_score(new_y,new_y_hat))
+        for j in range(len_att_values):
 
-        w2_init.append(np.mean(rocs))
+            this_roc = evls[i].area_under_roc(j)
 
-        print('Attribute {}: {}\n\tAUC: {:0.4f}'.format(i,att,np.mean(rocs)))
+            if np.isnan(this_roc):
+                print('\tNAN at value {}'.format(data.attribute(i).values[j]))
+                this_roc = 1
 
-        temp_w = np.zeros(len(data.attribute(i).values))
+            rocs.append(this_roc)
 
-        this_y[np.isnan(this_y)] = 0
+            temp = evls[i].recall(j)
+            if np.isnan(temp):
+                temp = 0
+            temp_w[j] = temp
 
-        this_recs = recall_score(this_y,this_y_hat,average=None)
-
-        for i,rec in zip(np.unique(np.concatenate((this_y_hat,this_y))),this_recs):
-
-            temp_w[int(i)] = rec
+        print('\tAverage AUC: {:0.4f}\n'.format(np.mean(rocs)))
 
         w1_init.append(temp_w)
+        w2_init.append(np.mean(rocs))
 
     bias_init = np.zeros((len(w2_init)))
 
@@ -190,6 +195,8 @@ def test(data,N,attributes,clfs,w1,b1,w2):
     y = data.values(class_index_data)
     y = np.abs(y-1)
 
+    #print(y)
+    #print(res)
     my_score = roc_auc_score(y,res)
 
     return res,my_score

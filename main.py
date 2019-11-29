@@ -36,18 +36,23 @@ if __name__ == '__main__':
     data_train, attributes = load_data(train_path)
     N_train = data_train.num_instances
     #data_normal, N = make_partition(data,attributes)
+    attributes = attributes[:-1]
 
-    #remove = Filter(classname='weka.filters.unsupervised.attribute.Remove',
-                    #options = ['-R','last'])
-    #remove.inputformat(data_train)
-    #data_train = remove.filter(data_train)
+    remove = Filter(classname='weka.filters.unsupervised.attribute.Remove',
+                    options = ['-R','last'])
+    remove.inputformat(data_train)
+    data_train = remove.filter(data_train)
+
+    #print(data_train)
 
     m_train = data_train.num_attributes
 
     print('\n\n############ Training Decision Trees ############\n\n')
 
-    clfs,dt_y_hat = train_trees(data_train,attributes)
-    w2_init,w1_init,b1_init = get_initial_weights(data_train,clfs,attributes,dt_y_hat)
+    clfs,evls,dt_y_hat = train_trees(data_train,attributes)
+    #w2_init,w1_init,b1_init = get_initial_weights(data_train,clfs,attributes,dt_y_hat)
+
+    w2_init,w1_init,b1_init = get_initial_weights(data_train,clfs,evls,attributes,dt_y_hat)
 
     if rand_init == True:
 
@@ -56,14 +61,21 @@ if __name__ == '__main__':
             len_values = len(data_train.attribute(i).values)
             w1_init.append(np.random.randn(len_values))
 
+    #print(w2_init)
 
-    print('\n\nDone!')
+    print('Done!')
 
     print('\n\n############ Training Hidden Layer Parameters ############\n\n')
 
+    if rand_init:
+        print('Weights Randomly Initialized\n\n')
+    else:
+        print('Weights initialized with Recall\n\n')
+
+
     w1,b1=train(w1_init = w1_init,
                 b1_init = b1_init,
-                lr = 0.01,
+                lr = 0.001,
                 iterations = 100,
                 N = N_train,
                 data = data_train,
