@@ -23,6 +23,6 @@ Use `--rand_init` flag to start with random parameters, Recall and AUC otherwise
 
 Only for categorical variables.
 
-Training dataset should not contain original Class attribute. Should contain only one class. 
+Training dataset should contain Class Attribute last, should be only one class (e.g. `genuine`).
 
-Testing dataset should contain Class attribute last, should be binary labels (eg. `normal`, `anomaly` but any name will work as long as it is binary). `Normal` Label should be first.
+Testing dataset should contain Class attribute last, should be binary labels (e.g. `impostor`, `genuine` but any name will work as long as it is binary). `impostor` Label should be first.
