@@ -11,9 +11,11 @@ Four possible input arguments:
 
 Use `--rand_init` flag to start with random parameters, Recall and AUC otherwise.
 
-##### Example
+##### Example:
 
-`python main.py --training_data [train_data].arff --testing_data [test_data].arff --outfile [outfile].json --rand_init`
+The following command will train the model using the `breast-cancer.training1.arff` file and test using `breast-cancer.testing1.arff`. The results will be saved in `my_result.json`. The weights will be randomly initialized.
+
+`python main.py --training_data breast-cancer.training1.arff --testing_data breast-cancer.testing1.arff --outfile my_result.json --rand_init`
 
 ### Dependencies
 
