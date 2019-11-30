@@ -13,7 +13,7 @@ from weka.filters import Filter
 from copy import deepcopy
 #import sklearn
 
-from classifier import train_trees, get_initial_weights,sigmoid,neuron_l1,train, test
+from classifier import train_trees, get_initial_weights,sigmoid,neuron_l1,train, test, train_v2
 from data_loader import load_data, make_partition
 
 parser = argparse.ArgumentParser()
@@ -35,7 +35,6 @@ if __name__ == '__main__':
 
     data_train, attributes = load_data(train_path)
     N_train = data_train.num_instances
-    #data_normal, N = make_partition(data,attributes)
     attributes = attributes[:-1]
 
     remove = Filter(classname='weka.filters.unsupervised.attribute.Remove',
@@ -43,8 +42,22 @@ if __name__ == '__main__':
     remove.inputformat(data_train)
     data_train = remove.filter(data_train)
 
-    #print(data_train)
+    doit = False
 
+    for i in range(data_train.num_attributes):
+        if len(data_train.attribute(i).values) <= 1:
+            to_del.append(i)
+            doit = True
+
+    if doit:
+        to_del_str = ','.join(str(e) for e in to_del)
+        remove_const = Filter(classname='weka.filters.unsupervised.attribute.Remove',
+                              options = ['-R',to_del_str])
+        remove_const.inputformat(data_train)
+        data_train = remove_const.filter(data_train)
+
+    #print(data_train)
+    attributes = [f.name for f in data_train.attributes()]
     m_train = data_train.num_attributes
 
     print('\n\n############ Training Decision Trees ############\n\n')
@@ -73,14 +86,24 @@ if __name__ == '__main__':
         print('Weights initialized with Recall\n\n')
 
 
-    w1,b1=train(w1_init = w1_init,
-                b1_init = b1_init,
-                lr = 0.001,
-                iterations = 100,
-                N = N_train,
-                data = data_train,
-                attributes = attributes,
-                dt_y_hat = dt_y_hat)
+    #w1,b1=train(w1_init = w1_init,
+    #            b1_init = b1_init,
+    #            lr = 0.001,
+    #            iterations = 100,
+    #            N = N_train,
+    #            data = data_train,
+    #            attributes = attributes,
+    #            dt_y_hat = dt_y_hat)
+
+    w1,b1 = train_v2(w1_init = w1_init,
+                     b1_init = b1_init,
+                     lr = 0.001,
+                     epochs = 30,
+                     N = N_train,
+                     data = data_train,
+                     attributes = attributes,
+                     dt_y_hat = dt_y_hat,
+                     batch_size = 32)
 
     data_test,attributes_test = load_data(test_path)
     data_test.class_is_last()
