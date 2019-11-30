@@ -30,3 +30,9 @@ Only for categorical variables.
 Training dataset should contain Class Attribute last, should be only one class (e.g. `genuine`).
 
 Testing dataset should contain Class attribute last, should be binary labels (e.g. `impostor`, `genuine` but any name will work as long as it is binary). `impostor` Label should be first.
+
+### Changing the classifier
+
+The Classifier for the encoder is a J48 Decision Tree implementation from Weka. You can edit the arguments by editing the options list or change the classifier altogether on line 28 of `classifier.py` within the `train_trees()` function definition. For information on the available options for J48 you can look [here](http://weka.sourceforge.net/doc.dev/weka/classifiers/trees/J48.html). Right now the default values `<pruning confidence> = 0.25` and `<minimum number of instances> = 2` have been set.
+
+For information on other decision tree implementations within Weka you can check [here](http://weka.sourceforge.net/doc.dev/weka/classifiers/trees/package-summary.html). Using any of these should be as simple as changing the classname and option arguments as necessary.
