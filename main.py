@@ -11,9 +11,8 @@ from weka.core.converters import Loader
 from weka.filters import Filter
 
 from copy import deepcopy
-#import sklearn
 
-from classifier import train_trees, get_initial_weights,sigmoid,neuron_l1,train, test, train_v2
+from classifier import train_trees, get_initial_weights,sigmoid,neuron_l1,train, test
 from data_loader import load_data, make_partition
 
 parser = argparse.ArgumentParser()
@@ -63,9 +62,12 @@ if __name__ == '__main__':
     print('\n\n############ Training Decision Trees ############\n\n')
 
     clfs,evls,dt_y_hat = train_trees(data_train,attributes)
-    #w2_init,w1_init,b1_init = get_initial_weights(data_train,clfs,attributes,dt_y_hat)
 
-    w2_init,w1_init,b1_init = get_initial_weights(data_train,clfs,evls,attributes,dt_y_hat)
+    w2_init,w1_init,b1_init = get_initial_weights(data_train,
+                                                  clfs,
+                                                  evls,
+                                                  attributes,
+                                                  dt_y_hat)
 
     if rand_init == True:
 
@@ -86,43 +88,43 @@ if __name__ == '__main__':
         print('Weights initialized with Recall\n\n')
 
 
-    #w1,b1=train(w1_init = w1_init,
-    #            b1_init = b1_init,
-    #            lr = 0.001,
-    #            iterations = 100,
-    #            N = N_train,
-    #            data = data_train,
-    #            attributes = attributes,
-    #            dt_y_hat = dt_y_hat)
-
-    w1,b1 = train_v2(w1_init = w1_init,
-                     b1_init = b1_init,
-                     lr = 0.001,
-                     epochs = 30,
-                     N = N_train,
-                     data = data_train,
-                     attributes = attributes,
-                     dt_y_hat = dt_y_hat,
-                     batch_size = 32)
+    w1,b1 = train(w1_init = w1_init,
+                  b1_init = b1_init,
+                  lr = 0.001,
+                  epochs = 30,
+                  N = N_train,
+                  data = data_train,
+                  attributes = attributes,
+                  dt_y_hat = dt_y_hat,
+                  batch_size = 32)
 
     data_test,attributes_test = load_data(test_path)
     data_test.class_is_last()
     N_test = data_test.num_instances
 
-    res,my_score = test(data_test,N_test,attributes_test,clfs,w1,b1,w2_init)
+    print('\n\n############ Running Model on Test Data ############\n\n')
 
-    #with open(outfile,'w') as f:
-        #f.write('############ DTAE Report ############\n\n')
-        #f.write(': {}\n\n'.format(res))
-        #f.write(''str(my_score))
+    res,my_score = test(data_test,
+                        N_test,
+                        attributes_test,
+                        clfs,
+                        w1,
+                        b1,
+                        w2_init)
 
-    print('\n\n############ Final AUC Score on Testing Data ############\n')
 
-    print('\t\t',my_score,'\n\n')
+    print('\n\nAverage Score using trained values: {}'.format(my_score))
 
-    res2,my_score2 = test(data_test,N_test,attributes_test,clfs,w1_init,b1_init,w2_init)
+    res2,my_score2 = test(data_test,
+                          N_test,
+                          attributes_test,
+                          clfs,
+                          w1_init,
+                          b1_init,
+                          w2_init,
+                          verbose = 0)
 
-    print('Score using initial values: {}\n\n'.format(my_score2))
+    print('\n\nAverage Score using initial values: {}\n\n'.format(my_score2))
 
     dict_res = {'AUC_trained':my_score,
                 'scores_trained':res.tolist(),

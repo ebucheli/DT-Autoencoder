@@ -52,19 +52,24 @@ def get_initial_weights(data,clfs,evls,attributes,dt_y_hat):
 
         temp_w = np.zeros(len_att_values)
 
+        num_nans = 0
+
         for j in range(len_att_values):
 
             this_roc = evls[i].area_under_roc(j)
 
             if np.isnan(this_roc):
                 print('\tNAN at value {}'.format(data.attribute(i).values[j]))
-                this_roc = 1
-
-            rocs.append(this_roc)
+                #num_nans += 1
+                #this_roc = 0
+            else:
+                rocs.append(this_roc)
 
             temp = evls[i].recall(j)
+
             if np.isnan(temp):
                 temp = 0
+
             temp_w[j] = temp
 
         print('\tAverage AUC: {:0.4f}\n'.format(np.mean(rocs)))
@@ -94,73 +99,6 @@ def neuron_l1(x_prime,weights,bias,indxs):
 
     return my_res
 
-def train(w1_init,b1_init,lr,iterations,N,data,attributes,dt_y_hat):
-
-    w1 = deepcopy(w1_init)
-    b1 = deepcopy(b1_init)
-
-    losses = []
-    accs = []
-
-    for i in range(iterations):
-
-        hl1_this = np.zeros((N,len(dt_y_hat)))
-
-        for j,x_prime in enumerate(dt_y_hat):
-
-            x_prime_prime = x_prime*w1[j]
-            num_labels = np.array(data.values(j),dtype = np.int64)
-
-            for dani,f in enumerate(num_labels):
-                if f < 0:
-                    num_labels[dani] = 0
-
-            for k in np.unique(num_labels):
-
-                if np.isnan(k):
-                    k = 0
-
-
-                indices = np.where(num_labels==k)
-                this_probs = x_prime[indices]
-                x_prime_this = x_prime[indices]
-                x_prime_prime_this = x_prime_prime[indices]
-
-                a = neuron_l1(x_prime_this,w1[j],b1[j],np.ones((len(x_prime_this)),dtype = int)*k)
-
-                grad_wj = np.dot(a*(1-a),x_prime_this[:,k])
-                grad_bias = np.mean(a*(1-a))
-
-
-                w1[j][k] = w1[j][k] + lr*grad_wj
-                b1[j] = b1[j] + lr*grad_bias
-                #for this_indx in [f for f in np.arange(np.max(num_labels)) if f != k]:
-
-                #    if this_indx < k:
-                #        grad_indx = this_indx
-                #    elif this_indx > k:
-                #        grad_indx = this_indx-1
-
-                #    w1[j][this_indx] = w1[j][grad_indx] - lrw1*grad_wl[grad_indx]
-
-
-        for j,x_prime in enumerate(dt_y_hat):
-
-            num_labels = np.array(data.values(j),dtype = np.int64)
-
-            for dani,f in enumerate(num_labels):
-                if f < 0:
-                    num_labels[dani] = 0
-
-            hl1_this[:,j] = neuron_l1(x_prime,w1[j],b1[j],num_labels)
-
-        this_loss = np.mean(hl1_this,axis = 0)
-        if i % 50 == 0 or i == iterations-1:
-            print('Iteration {}:'.format(i+1))
-            for m, loss_part in enumerate(this_loss):
-                print('\tAttribute {} Loss: {:0.4f}'.format(m+1,loss_part))
-    return w1,b1
-
 def get_batches(dt_y_hat,batch_size=32):
 
     N = len(dt_y_hat)
@@ -186,7 +124,7 @@ def get_batches(dt_y_hat,batch_size=32):
 
     return batches,batch_startend
 
-def train_v2(w1_init,b1_init,lr,epochs,N,data,attributes,dt_y_hat,batch_size):
+def train(w1_init,b1_init,lr,epochs,N,data,attributes,dt_y_hat,batch_size):
 
     w1 = deepcopy(w1_init)
     b1 = deepcopy(b1_init)
@@ -257,7 +195,7 @@ def train_v2(w1_init,b1_init,lr,epochs,N,data,attributes,dt_y_hat,batch_size):
                 print('\tAttribute {} Loss: {:0.4f}'.format(m+1,loss_part))
     return w1,b1
 
-def test(data,N,attributes,clfs,w1,b1,w2):
+def test(data,N,attributes,clfs,w1,b1,w2,verbose = 1):
 
     remove = Filter(classname='weka.filters.unsupervised.attribute.Remove',
                     options = ['-R','last'])
@@ -274,17 +212,37 @@ def test(data,N,attributes,clfs,w1,b1,w2):
     hl1_this_all = np.zeros((N,len(attributes[:-1])))
     preds = []
 
+    my_div = np.zeros((N,))+len(w2)
+
     for j,x_prime in enumerate(dt_all):
 
-        num_labels = np.array(data_noclass.values(j),dtype = np.int64)
+        num_labels = np.array(data_noclass.values(j),dtype = np.int32)
 
+        missing_vals = []
+
+        doit = False
         for dani,f in enumerate(num_labels):
+
             if f < 0:
+                doit = True
+                missing_vals.append(dani)
                 num_labels[dani] = 0
 
-        preds.append(neuron_l1(x_prime,w1[j],b1[j],num_labels))
+        if doit:
+            if verbose:
+                print('There were missing values on instances {} of attribute {}'.format(missing_vals,attributes[j]))
 
-    res = np.dot(np.array(preds).T,w2)/len(attributes[:-1])
+        this_preds = neuron_l1(x_prime,w1[j],b1[j],num_labels)
+
+        for miss in missing_vals:
+            this_preds[miss] = 0
+            my_div[miss] -= 1
+        #print(this_preds)
+        preds.append(this_preds)
+
+    #print(preds)
+
+    res = np.dot(np.array(preds).T,w2)/my_div
 
     class_index_data = data.class_index
 
