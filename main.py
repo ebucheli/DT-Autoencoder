@@ -42,10 +42,11 @@ if __name__ == '__main__':
     data_train = remove.filter(data_train)
 
     doit = False
+    to_del = []
 
     for i in range(data_train.num_attributes):
         if len(data_train.attribute(i).values) <= 1:
-            to_del.append(i)
+            to_del.append(i+1)
             doit = True
 
     if doit:
@@ -55,7 +56,6 @@ if __name__ == '__main__':
         remove_const.inputformat(data_train)
         data_train = remove_const.filter(data_train)
 
-    #print(data_train)
     attributes = [f.name for f in data_train.attributes()]
     m_train = data_train.num_attributes
 
@@ -75,8 +75,6 @@ if __name__ == '__main__':
         for i in range(m_train):
             len_values = len(data_train.attribute(i).values)
             w1_init.append(np.random.randn(len_values))
-
-    #print(w2_init)
 
     print('Done!')
 
@@ -101,6 +99,24 @@ if __name__ == '__main__':
     data_test,attributes_test = load_data(test_path)
     data_test.class_is_last()
     N_test = data_test.num_instances
+
+    doit = False
+    to_del = []
+
+    for i in range(data_test.num_attributes):
+        if len(data_test.attribute(i).values) <= 1:
+            to_del.append(i+1)
+            doit = True
+
+    if doit:
+        print('Deleting Constant Attributes {}'.format(to_del))
+        to_del_str = ','.join(str(e) for e in to_del)
+        remove_const = Filter(classname='weka.filters.unsupervised.attribute.Remove',
+                              options = ['-R',to_del_str])
+        remove_const.inputformat(data_test)
+        data_test = remove_const.filter(data_test)
+
+    attributes_test = [f.name for f in data_test.attributes()]
 
     print('\n\n############ Running Model on Test Data ############\n\n')
 
