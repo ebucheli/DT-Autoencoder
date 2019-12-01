@@ -92,7 +92,7 @@ if __name__ == '__main__':
         w1,b1 = train(w1_init = w1_init,
                       b1_init = b1_init,
                       lr = 0.001,
-                      epochs = 5,
+                      epochs = 30,
                       N = N_train,
                       data = data_train,
                       attributes = attributes,
