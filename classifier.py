@@ -21,9 +21,22 @@ def train_trees(data,attributes):
     evls = []
     dt_y_hat = []
 
+    unused_attributes = []
+
     for i,att in enumerate(attributes):
 
         data.class_index = i
+
+        count_non_nans = np.count_nonzero(~np.isnan(data.values(i)))
+
+        if count_non_nans<5:
+
+            unused_attributes.append(i)
+            print('Not using attribute {}, only {} real values\n\n'.format(att,count_non_nans))
+            clfs.append(None)
+            evls.append(None)
+            dt_y_hat.append(None)
+            continue
 
         this_clf = Classifier(classname='weka.classifiers.trees.J48',options = ['-C','0.25','-M','2'])
         this_clf.build_classifier(data)
@@ -35,13 +48,17 @@ def train_trees(data,attributes):
         clfs.append(this_clf)
         evls.append(this_evl)
 
-    return clfs,evls,dt_y_hat
+    return clfs,evls,dt_y_hat,unused_attributes
 
-def get_initial_weights(data,clfs,evls,attributes,dt_y_hat):
+def get_initial_weights(data,clfs,evls,attributes,dt_y_hat,unused_attributes):
     w1_init = []
     w2_init = []
 
     for i,att in enumerate(attributes):
+        if i in unused_attributes:
+            w1_init.append(None)
+            w2_init.append(None)
+            continue
 
         print('Attribute: {}\n'.format(att))
 
@@ -96,6 +113,9 @@ def sigmoid(x):
 
 def neuron_l1(x_prime,weights,bias,indxs):
 
+    if x_prime is None:
+        return None
+
     my_res = np.zeros((len(x_prime)))
 
     for i,this_x_prime in enumerate(x_prime):
@@ -134,7 +154,7 @@ def get_batches(dt_y_hat,batch_size=32):
 
     return batches,batch_startend
 
-def train(w1_init,b1_init,lr,epochs,N,data,attributes,dt_y_hat,batch_size):
+def train(w1_init,b1_init,lr,epochs,N,data,attributes,dt_y_hat,batch_size,unused_attributes):
 
     w1 = deepcopy(w1_init)
     b1 = deepcopy(b1_init)
@@ -147,6 +167,9 @@ def train(w1_init,b1_init,lr,epochs,N,data,attributes,dt_y_hat,batch_size):
         hl1_this = np.zeros((N,len(dt_y_hat)))
 
         for j,x_prime in enumerate(dt_y_hat):
+            if j in unused_attributes:
+                #print(j)
+                continue
 
             batches,batch_startend = get_batches(x_prime,batch_size=batch_size)
             num_labels = np.array(data.values(j),dtype = np.int64)
@@ -205,7 +228,7 @@ def train(w1_init,b1_init,lr,epochs,N,data,attributes,dt_y_hat,batch_size):
                 print('\tAttribute {} Loss: {:0.4f}'.format(m+1,loss_part))
     return w1,b1
 
-def test(data,N,attributes,clfs,w1,b1,w2,verbose = 1):
+def test(data,N,attributes,clfs,w1,b1,w2,unused_attributes,verbose = 1):
 
     remove = Filter(classname='weka.filters.unsupervised.attribute.Remove',
                     options = ['-R','last'])
@@ -216,15 +239,23 @@ def test(data,N,attributes,clfs,w1,b1,w2,verbose = 1):
     dt_all = []
 
     for i,att in enumerate(attributes[:-1]):
+
+        if i in unused_attributes:
+            dt_all.append(None)
+            continue
+
         data_noclass.class_index = i
         dt_all.append(clfs[i].distributions_for_instances(data_noclass))
 
     hl1_this_all = np.zeros((N,len(attributes[:-1])))
     preds = []
 
-    my_div = np.zeros((N,))+len(w2)
+    my_div = np.zeros((N,))+len(w2)-len(unused_attributes)
 
     for j,x_prime in enumerate(dt_all):
+
+        if j in unused_attributes:
+            continue
 
         num_labels = np.array(data_noclass.values(j),dtype = np.int32)
 
@@ -247,20 +278,15 @@ def test(data,N,attributes,clfs,w1,b1,w2,verbose = 1):
         for miss in missing_vals:
             this_preds[miss] = 0
             my_div[miss] -= 1
-        #print(this_preds)
         preds.append(this_preds)
 
-    #print(preds)
-
-    res = np.dot(np.array(preds).T,w2)/my_div
+    w2_temp = np.delete(w2,unused_attributes)
+    res = np.dot(np.array(preds).T,w2_temp)/my_div
 
     class_index_data = data.class_index
 
     y = data.values(class_index_data)
     y = np.abs(y-1)
-
-    #print(y)
-    #print(res)
     my_score = roc_auc_score(y,res)
 
     return res,my_score
