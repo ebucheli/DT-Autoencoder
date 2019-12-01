@@ -81,7 +81,10 @@ def get_initial_weights(data,clfs,evls,attributes,dt_y_hat):
 
         print('\tAverage AUC: {:0.4f}\n'.format(np.mean(rocs)))
 
+        temp_w = temp_w+(np.random.randn(len(temp_w))*0.001)
+
         w1_init.append(temp_w)
+        #print(w1_init)
         w2_init.append(np.mean(rocs))
 
     bias_init = np.zeros((len(w2_init)))
