@@ -72,6 +72,9 @@ def get_initial_weights(data,clfs,evls,attributes,dt_y_hat):
 
             temp_w[j] = temp
 
+        if not rocs:
+            rocs.append(0)
+
         print('\tAverage AUC: {:0.4f}\n'.format(np.mean(rocs)))
 
         w1_init.append(temp_w)
