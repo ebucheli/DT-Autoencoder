@@ -58,8 +58,12 @@ def get_initial_weights(data,clfs,evls,attributes,dt_y_hat):
 
             this_roc = evls[i].area_under_roc(j)
 
+            #clfs[i].distributions_for_instances(data)
+
             if np.isnan(this_roc):
                 print('\tNAN at value {}'.format(data.attribute(i).values[j]))
+                #print(clfs[i].distributions_for_instances(data))
+                #exit()
                 #num_nans += 1
                 #this_roc = 0
             else:
@@ -73,7 +77,7 @@ def get_initial_weights(data,clfs,evls,attributes,dt_y_hat):
             temp_w[j] = temp
 
         if not rocs:
-            rocs.append(0)
+            rocs.append(1)
 
         print('\tAverage AUC: {:0.4f}\n'.format(np.mean(rocs)))
 

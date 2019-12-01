@@ -129,7 +129,7 @@ if __name__ == '__main__':
                         w2_init)
 
 
-    print('\n\nAverage Score using trained values: {}'.format(my_score))
+    print('\n\nAUC using trained values: {}'.format(my_score))
 
     res2,my_score2 = test(data_test,
                           N_test,
@@ -140,7 +140,7 @@ if __name__ == '__main__':
                           w2_init,
                           verbose = 0)
 
-    print('\n\nAverage Score using initial values: {}\n\n'.format(my_score2))
+    print('\n\nAUC using initial values: {}\n\n'.format(my_score2))
 
     dict_res = {'AUC_trained':my_score,
                 'scores_trained':res.tolist(),
