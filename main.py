@@ -12,7 +12,7 @@ from weka.filters import Filter
 
 from copy import deepcopy
 
-from classifier import train_trees, get_initial_weights,sigmoid,neuron_l1,train, test
+from classifier import train_trees, get_initial_weights,reLu,neuron_l1,train, test
 from data_loader import load_data, make_partition
 
 parser = argparse.ArgumentParser()
@@ -89,16 +89,16 @@ if __name__ == '__main__':
             print('Weights initialized with Recall\n\n')
 
 
-        w1,b1 = train(w1_init = w1_init,
-                      b1_init = b1_init,
-                      lr = 0.001,
-                      epochs = 30,
-                      N = N_train,
-                      data = data_train,
-                      attributes = attributes,
-                      dt_y_hat = dt_y_hat,
-                      batch_size = 32,
-                      unused_attributes = unused_attributes)
+        # w1,b1 = train(w1_init = w1_init,
+                      # b1_init = b1_init,
+                      # lr = 0.001,
+                      # epochs = 30,
+                      # N = N_train,
+                      # data = data_train,
+                      # attributes = attributes,
+                      # dt_y_hat = dt_y_hat,
+                      # batch_size = 32,
+                      # unused_attributes = unused_attributes)
 
         data_test,attributes_test = load_data(test_path)
         data_test.class_is_last()
@@ -124,17 +124,17 @@ if __name__ == '__main__':
 
         print('\n\n############ Running Model on Test Data ############\n\n')
 
-        res,my_score = test(data_test,
-                            N_test,
-                            attributes_test,
-                            clfs,
-                            w1,
-                            b1,
-                            w2_init,
-                            unused_attributes)
+        # res,my_score = test(data_test,
+                            # N_test,
+                            # attributes_test,
+                            # clfs,
+                            # w1,
+                            # b1,
+                            # w2_init,
+                            # unused_attributes)
 
 
-        print('\n\nAUC using trained values: {}'.format(my_score))
+        #print('\n\nAUC using trained values: {}'.format(my_score))
 
         res2,my_score2 = test(data_test,
                               N_test,
@@ -147,7 +147,11 @@ if __name__ == '__main__':
                               verbose = 0)
 
         print('\n\nAUC using initial values: {}\n\n'.format(my_score2))
-
+		
+		# Erase this line to train with SGD
+        res = res2
+        my_score = my_score2
+		
         dict_res = {'AUC_trained':my_score,
                     'scores_trained':res.tolist(),
                     'AUC_initial':my_score2,

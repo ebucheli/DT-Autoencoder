@@ -38,7 +38,7 @@ def train_trees(data,attributes):
             dt_y_hat.append(None)
             continue
 
-        this_clf = Classifier(classname='weka.classifiers.trees.J48',options = ['-C','0.25','-M','2'])
+        this_clf = Classifier(classname='weka.classifiers.trees.J48',options = ['-U','-B','-M','2'])
         this_clf.build_classifier(data)
 
         this_evl = Evaluation(data)
@@ -98,7 +98,7 @@ def get_initial_weights(data,clfs,evls,attributes,dt_y_hat,unused_attributes):
 
         print('\tAverage AUC: {:0.4f}\n'.format(np.mean(rocs)))
 
-        temp_w = temp_w+(np.random.randn(len(temp_w))*0.001)
+        #temp_w = temp_w+(np.random.randn(len(temp_w))*0.001)
 
         w1_init.append(temp_w)
         #print(w1_init)
@@ -108,8 +108,10 @@ def get_initial_weights(data,clfs,evls,attributes,dt_y_hat,unused_attributes):
 
     return w2_init,w1_init,bias_init
 
-def sigmoid(x):
-    return 1/(1+np.exp(-x))
+def reLu(x):
+    if x > 0:
+	    return x
+    return 0
 
 def neuron_l1(x_prime,weights,bias,indxs):
 
@@ -125,8 +127,9 @@ def neuron_l1(x_prime,weights,bias,indxs):
         this_x_wrong = np.delete(this_x_prime,indxs[i])
         w_wrong = np.delete(weights,indxs[i])
 
-        my_res[i] = sigmoid(this_x_prime[indxs[i]]*weights[indxs[i]]-np.mean(this_x_wrong*w_wrong)+bias)
-
+        #my_res[i] = reLu(this_x_prime[indxs[i]]*weights[indxs[i]]-np.mean(this_x_wrong*w_wrong)+bias)
+        my_res[i] = this_x_prime[indxs[i]]*weights[indxs[i]]-np.mean(this_x_wrong*w_wrong)
+		
     return my_res
 
 def get_batches(dt_y_hat,batch_size=32):
@@ -281,7 +284,8 @@ def test(data,N,attributes,clfs,w1,b1,w2,unused_attributes,verbose = 1):
         preds.append(this_preds)
 
     w2_temp = np.delete(w2,unused_attributes)
-    res = np.dot(np.array(preds).T,w2_temp)/my_div
+    #res = np.dot(np.array(preds).T,w2_temp)/my_div
+    res = np.dot(np.array(preds).T,w2_temp)
 
     class_index_data = data.class_index
 
